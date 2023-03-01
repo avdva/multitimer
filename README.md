@@ -26,6 +26,10 @@ create:
 New[T any]() // New returns a timer with capacity set to 1.
 NewWithCapacity[T any](cap int) // NewWithCapacity returns a timer for given capacity.
 
+use:
+Schedule(delay time.Duration, payload T) // Schedule schedules a timer. The payload will be sent to C after a delay.
+Stop() // Stop cancels all timers.
+
 ```
 
 ## Contact

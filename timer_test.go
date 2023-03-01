@@ -33,4 +33,6 @@ func TestMultiTimer_Stop(t *testing.T) {
 	case val := <-timer.C:
 		t.Fatalf("received unexpected value %d", val)
 	}
+	timer.Schedule(100*time.Millisecond, 100)
+	assert.Equal(t, 100, <-timer.C)
 }
