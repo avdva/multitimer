@@ -15,10 +15,13 @@ func less[T any](a, b item[T]) bool {
 	return a.when.Before(b.when)
 }
 
+// Timer sends payload to its chan after a delay.
+// One can schedule several events,
+// It is safe to use a Timer object concurrently.
 type Timer[T any] struct {
 	C chan T
 
-	m      sync.RWMutex
+	m      sync.Mutex
 	timer  *time.Timer
 	timers *arrayHeap[item[T], func(a, b item[T]) bool]
 }
@@ -34,7 +37,7 @@ func New[T any]() *Timer[T] {
 	return NewWithCapacity[T](1)
 }
 
-func (mt *Timer[T]) Add(delay time.Duration, payload T) {
+func (mt *Timer[T]) Schedule(delay time.Duration, payload T) {
 	if delay < 0 {
 		panic("negative delay")
 	}
@@ -46,23 +49,31 @@ func (mt *Timer[T]) Add(delay time.Duration, payload T) {
 		when:    when,
 		payload: payload,
 	})
-	mt.schedule(delay)
+	mt.schedule(now)
 }
 
 func (mt *Timer[T]) Stop() {
 	mt.m.Lock()
 	defer mt.m.Unlock()
-	if mt.timer != nil && !mt.timer.Stop() {
-		<-mt.timer.C
-	}
+	mt.stopTimer()
 	mt.timers.Clear()
 }
 
-func (mt *Timer[T]) schedule(delay time.Duration) {
+func (mt *Timer[T]) schedule(now time.Time) {
+	delay := mt.timers.Top().when.Sub(now)
 	if mt.timer == nil {
 		mt.timer = time.AfterFunc(delay, mt.fire)
 	} else {
 		mt.timer.Reset(delay)
+	}
+}
+
+func (mt *Timer[T]) stopTimer() {
+	if mt.timer != nil && !mt.timer.Stop() {
+		select {
+		case <-mt.timer.C:
+		default:
+		}
 	}
 }
 
@@ -72,14 +83,9 @@ func (mt *Timer[T]) fire() {
 	defer mt.m.Unlock()
 	toFire := mt.itemsToFire(now)
 	if mt.timers.Len() == 0 {
-		if !mt.timer.Stop() {
-			select {
-			case <-mt.timer.C:
-			default:
-			}
-		}
+		mt.stopTimer()
 	} else {
-		mt.schedule(mt.timers.Top().when.Sub(now))
+		mt.schedule(now)
 	}
 	for _, item := range toFire {
 		select {
