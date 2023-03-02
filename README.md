@@ -17,19 +17,39 @@ $ go get github.com/avdva/multitimer
 ## Description
 
 Timer sends payload to its chan after a delay. One can schedule several events, but only one real timer will be used.
-It is safe to use a Timer object concurrently. Timer may drop messages, if the reader does not read fast enough, so it's important to choose a correct chan capacity.
+It is safe to use a Timer object concurrently. Timer may drop messages, if the reader does not read fast enough, so it's important to choose a correct channel capacity.
 
 ## API
 
 ```go
 create:
-New[T any]() // New returns a timer with capacity set to 1.
-NewWithCapacity[T any](cap int) // NewWithCapacity returns a timer for given capacity.
+// New returns a timer with capacity set to 1.
+New[T any]() 
+// NewWithCapacity returns a timer for given capacity.
+NewWithCapacity[T any](cap int)
 
 use:
-Schedule(delay time.Duration, payload T) // Schedule schedules a timer. The payload will be sent to C after a delay.
-Stop() // Stop cancels all timers.
+// Schedule schedules a timer to fire after the delay.
+// The payload will be sent to C.
+Schedule(delay time.Duration, payload T)
+// ScheduleAt schedules a timer to fire at the specific moment.
+// The payload will be sent to C.
+ScheduleAt(when time.Time, payload T)
+// Stop cancels all the timers.
+Stop() 
 
+```
+
+## Examples
+
+```go
+timer := NewWithCapacity[int](10)
+for i := 0; i < 10; i++ {
+	timer.Schedule(100*time.Millisecond*time.Duration(i+1), i)
+}
+for i := 0; i < 10; i++ {
+	fmt.Println(<-timer.C)
+}
 ```
 
 ## Contact
