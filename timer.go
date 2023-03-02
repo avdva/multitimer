@@ -41,14 +41,31 @@ func New[T any]() *Timer[T] {
 	return NewWithCapacity[T](1)
 }
 
-// Schedule schedules a timer.
-// The payload will be sent to C after a delay.
+// Schedule schedules a timer to fire after the delay.
+// The payload will be sent to C.
 func (mt *Timer[T]) Schedule(delay time.Duration, payload T) {
 	if delay < 0 {
 		panic("negative delay")
 	}
 	now := time.Now()
 	when := now.Add(delay)
+	mt.m.Lock()
+	defer mt.m.Unlock()
+	heap.Push(mt.timers, item[T]{
+		when:    when,
+		payload: payload,
+	})
+	mt.schedule(now)
+}
+
+// ScheduleAt schedules a timer to fire at the specific moment.
+// The payload will be sent to C.
+func (mt *Timer[T]) ScheduleAt(when time.Time, payload T) {
+	now := time.Now()
+	if !now.After(when) {
+		mt.send(payload)
+		return
+	}
 	mt.m.Lock()
 	defer mt.m.Unlock()
 	heap.Push(mt.timers, item[T]{
@@ -95,10 +112,14 @@ func (mt *Timer[T]) fire() {
 		mt.schedule(now)
 	}
 	for _, item := range toFire {
-		select {
-		case mt.C <- item.payload:
-		default:
-		}
+		mt.send(item.payload)
+	}
+}
+
+func (mt *Timer[T]) send(payload T) {
+	select {
+	case mt.C <- payload:
+	default:
 	}
 }
 
