@@ -29,6 +29,7 @@ type Timer[T any] struct {
 }
 
 // NewWithCapacity returns a timer for given capacity.
+//	cap is the capacity of the chan, where the payload will be sent.
 func NewWithCapacity[T any](cap int) *Timer[T] {
 	return &Timer[T]{
 		C:      make(chan T, cap),

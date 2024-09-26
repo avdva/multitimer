@@ -3,7 +3,7 @@ The package provides a convenient way of managing several timers.
 
 ## Badges
 
-![Build Status](https://github.com/avdva/multitimer/workflows/golangci-lint/badge.svg)
+[![Build Status](https://github.com/avdva/multitimer/workflows/golangci-lint/badge.svg)](https://github.com/avdva/multitimer/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/avdva/multitimer)](https://goreportcard.com/report/github.com/avdva/multitimer)
 
 ## Installation
