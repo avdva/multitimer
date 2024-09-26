@@ -22,21 +22,21 @@ It is safe to use a Timer object concurrently. Timer may drop messages, if the r
 ## API
 
 ```go
-create:
+// Constructors:
 // New returns a timer with capacity set to 1.
-New[T any]() 
+New[T any]() {}
 // NewWithCapacity returns a timer for given capacity.
-NewWithCapacity[T any](cap int)
+NewWithCapacity[T any](cap int) {}
 
-use:
+// Usage:
 // Schedule schedules a timer to fire after the delay.
 // The payload will be sent to C.
-Schedule(delay time.Duration, payload T)
+Schedule(delay time.Duration, payload T) {}
 // ScheduleAt schedules a timer to fire at the specific moment.
 // The payload will be sent to C.
-ScheduleAt(when time.Time, payload T)
+ScheduleAt(when time.Time, payload T) {}
 // Stop cancels all the timers.
-Stop() 
+Stop() {}
 
 ```
 
